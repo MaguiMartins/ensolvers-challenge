@@ -22,6 +22,7 @@ function App() {
   const [tags, setTags] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [filterTag, setFilterTag] = useState('');
 
   const API_URL = 'http://localhost:3000/notes';
 
@@ -31,8 +32,12 @@ function App() {
   }, [showArchived]);
 
   const fetchNotes = async () => {
-    const res = await axios.get(`${API_URL}?archived=${showArchived}`);
-    setNotes(res.data);
+    try {
+      const res = await axios.get(`${API_URL}?archived=${showArchived}`);
+      setNotes(res.data);
+    } catch (error) {
+      console.error("Error cargando notas. Asegúrate que el backend esté corriendo.");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,7 +62,7 @@ function App() {
   };
 
   const handleDelete = async (id: number) => {
-    if(!confirm('Delete note?')) return;
+    if(!confirm('¿Estás seguro de eliminar esta nota?')) return;
     await axios.delete(`${API_URL}/${id}`);
     fetchNotes();
   };
@@ -71,63 +76,139 @@ function App() {
     setEditingId(note.id);
     setTitle(note.title);
     setContent(note.content);
-    setTags(note.categories.map(c => c.name).join(', '));
+    //setTags(note.categories.map(c => c.name).join(', '));
+    setTags(note.categories ? note.categories.map(c => c.name).join(', ') : '');
   };
 
+  const filteredNotes = notes.filter(note => {
+    if (filterTag === '') return true; 
+    return note.categories && note.categories.some(cat => 
+      cat.name.toLowerCase().includes(filterTag.toLowerCase())
+    );
+  });
+
   return (
-    <div className="container mt-5">
-      <h1>My Notes App</h1>
-
-      {/* Formulario */}
-      <div className="card p-3 mb-4">
-        <form onSubmit={handleSubmit}>
-          <div className="mb-2">
-            <input 
-              type="text" className="form-control" placeholder="Title" 
-              value={title} onChange={e => setTitle(e.target.value)} required 
-            />
-          </div>
-          <div className="mb-2">
-            <textarea 
-              className="form-control" placeholder="Content" 
-              value={content} onChange={e => setContent(e.target.value)} required 
-            />
-          </div>
-         <div className="mb-2">
-            <input 
-              type="text" className="form-control" placeholder="Tags (separado por coma)" 
-              value={tags} onChange={e => setTags(e.target.value)} 
-            />
-          </div>
-          <button className="btn btn-primary">{editingId ? 'Update' : 'Create'}</button>
-          {editingId && <button type="button" className="btn btn-secondary ms-2" onClick={() => { setEditingId(null); setTitle(''); setContent(''); setTags(''); }}>Cancel</button>}
-        </form>
-      </div>
-
-      {/* Filtro Archivo */}
-      <div className="mb-3">
-        <button className={`btn ${showArchived ? 'btn-secondary' : 'btn-outline-secondary'}`} onClick={() => setShowArchived(!showArchived)}>
-          {showArchived ? 'Show Active Notes' : 'Show Archived Notes'}
-        </button>
-      </div>
-
-      {/* Lista de Notas */}
-      <div className="row">
-        {notes.map(note => (
-          <div key={note.id} className="col-md-4 mb-3">
-            <div className="card h-100">
-              <div className="card-body">
-                <h5 className="card-title">{note.title}</h5>
-                <p className="card-text">{note.content}</p>
-                <button className="btn btn-sm btn-warning me-2" onClick={() => handleEdit(note)}>Edit</button>
-                <button className="btn btn-sm btn-info me-2" onClick={() => handleArchive(note.id, note.archived)}>
-                  {note.archived ? 'Unarchive' : 'Archive'}
-                </button>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(note.id)}>Delete</button>
+    <div className="min-vh-100 bg-light">
+      
+      <div className="bg-white shadow-sm pb-5 pt-4 mb-5">
+        <div className="container">
+          
+          <h1 className="text-center mb-4 fw-bold text-primary">Notes App</h1>
+          
+          <div className="row justify-content-center">
+            <div className="col-md-8 col-lg-6">
+              
+              <div className="card shadow border-0" style={{ backgroundColor: '#f8f9fa' }}>
+                <div className="card-body p-4">
+                  <h5 className="card-title text-center mb-3 text-secondary">
+                    {editingId ? '✏️ Editar Nota' : '📝 Crear Nueva Nota'}
+                  </h5>
+                  
+                  <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                      <input 
+                        type="text" className="form-control form-control-lg" placeholder="Título..." 
+                        value={title} onChange={e => setTitle(e.target.value)} required 
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <textarea 
+                        className="form-control" rows={3} placeholder="Contenido de la nota..." 
+                        value={content} onChange={e => setContent(e.target.value)} required 
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <input 
+                        type="text" className="form-control" placeholder="Tags (separados por coma: ej. trabajo, urgente)" 
+                        value={tags} onChange={e => setTags(e.target.value)} 
+                      />
+                    </div>
+                    
+                    <div className="d-grid gap-2">
+                      <button className={`btn ${editingId ? 'btn-warning' : 'btn-primary'} btn-lg`}>
+                        {editingId ? 'Actualizar' : 'Guardar Nota'}
+                      </button>
+                      {editingId && (
+                        <button type="button" className="btn btn-secondary" onClick={() => { setEditingId(null); setTitle(''); setContent(''); setTags(''); }}>
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </form>
+                </div>
               </div>
+              
             </div>
           </div>
-        ))}
+        </div>
+      </div>
+
+      <div className="container pb-5">
+        
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
+          
+          <h3 className="text-secondary m-0 border-start border-4 border-primary ps-3">
+             {showArchived ? '🗄️ Archivo' : '📌 Mis Notas'}
+          </h3>
+
+          <div className="d-flex gap-2 w-100 w-md-auto justify-content-end">
+            <input 
+              type="text" 
+              className="form-control" 
+              style={{ maxWidth: '250px'}}
+              placeholder="🔍 Filtrar por tag..." 
+              value={filterTag}
+              onChange={e => setFilterTag(e.target.value)}
+            />
+
+            <button className={`btn ${showArchived ? 'btn-secondary' : 'btn-outline-dark'}`} onClick={() => setShowArchived(!showArchived)}>
+              {showArchived ? 'Ver Activas' : 'Ver Archivadas'}
+            </button>
+          </div>
+        </div>
+
+        <div className="row g-4">
+          {filteredNotes.length === 0 && (
+            <div className="col-12 text-center text-muted py-5">
+              <h4>No se encontraron notas...</h4>
+            </div>
+          )}
+
+          {filteredNotes.map(note => (
+            <div key={note.id} className="col-md-4">
+              <div className="card h-100 shadow-sm border-0 hover-card">
+                <div className="card-body d-flex flex-column">
+                  
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h5 className="card-title fw-bold text-dark">{note.title}</h5>
+                    {note.archived && <span className="badge bg-secondary">Archivada</span>}
+                  </div>
+                  
+                  <p className="card-text text-secondary flex-grow-1">{note.content}</p>
+                  
+                  <div className="mb-3">
+                    {note.categories && note.categories.map((cat, idx) => (
+                       <span key={idx} className="badge bg-info text-dark me-1 rounded-pill border border-info bg-opacity-25">
+                         #{cat.name}
+                       </span>
+                    ))}
+                  </div>
+
+                  <div className="border-top pt-3 d-flex gap-2">
+                    <button className="btn btn-sm btn-outline-primary flex-grow-1" onClick={() => handleEdit(note)}>Editar</button>
+                    <button className="btn btn-sm btn-outline-warning" onClick={() => handleArchive(note.id, note.archived)} title="Archivar">
+                      {note.archived ? 'Desarchivar' : 'Archivar'}
+                    </button>
+                    <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(note.id)} title="Borrar">
+                      Borrar
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

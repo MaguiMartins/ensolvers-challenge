@@ -16,6 +16,11 @@ interface Note {
 }
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
   const [notes, setNotes] = useState<Note[]>([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -27,9 +32,29 @@ function App() {
   const API_URL = 'http://localhost:3000/notes';
 
   
-  useEffect(() => {
-    fetchNotes();
-  }, [showArchived]);
+useEffect(() => {
+    if (isLoggedIn) {
+      fetchNotes();
+    }
+  }, [showArchived, isLoggedIn]); // Solo carga notas si está logueado
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (username === 'admin' && password === '123456') {
+      setIsLoggedIn(true);
+      setLoginError('');
+    } else {
+      setLoginError('Usuario o contraseña incorrectos');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUsername('');
+    setPassword('');
+    setNotes([]);
+  };
 
   const fetchNotes = async () => {
     try {
@@ -87,13 +112,60 @@ function App() {
     );
   });
 
+
+  if (!isLoggedIn) {
+    return (
+      <div className="d-flex align-items-center justify-content-center min-vh-100 bg-light">
+        <div className="card shadow border-0 p-4" style={{ maxWidth: '400px', width: '100%' }}>
+          <div className="text-center mb-4">
+            <h2 className="fw-bold text-primary">Bienvenido</h2>
+            <p className="text-muted">Ingresa para ver tus notas</p>
+          </div>
+          
+          <form onSubmit={handleLogin}>
+            <div className="mb-3">
+              <label className="form-label">Usuario</label>
+              <input 
+                type="text" 
+                className="form-control" 
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="mb-4">
+              <label className="form-label">Contraseña</label>
+              <input 
+                type="password" 
+                className="form-control" 
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </div>
+            
+            {loginError && <div className="alert alert-danger py-2">{loginError}</div>}
+            
+            <button type="submit" className="btn btn-primary w-100 btn-lg">
+              Ingresar
+            </button>
+            <div className="mt-3 text-center text-muted small">
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-vh-100 bg-light">
       
       <div className="bg-white shadow-sm pb-5 pt-4 mb-5">
         <div className="container">
           
-          <h1 className="text-center mb-4 fw-bold text-primary">Notes App</h1>
+          <div className="d-flex justify-content-between align-items-center mb-4">
+             <h1 className="fw-bold text-primary m-0">Notes App</h1>
+             <button className="btn btn-outline-danger btn-sm" onClick={handleLogout}>Cerrar Sesión</button>
+          </div>
           
           <div className="row justify-content-center">
             <div className="col-md-8 col-lg-6">

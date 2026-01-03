@@ -15,7 +15,10 @@ export class NotesService {
   }
 
   findAll(archived: boolean = false) {
-    return this.notesRepository.find({ where: { archived } });
+    return this.notesRepository.find({ 
+      where: { archived }, 
+      relations: ['categories'] 
+    });
   }
 
   findOne(id: number) {

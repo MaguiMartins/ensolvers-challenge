@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Category } from './category.entity';
 
 @Entity()
 export class Note {
@@ -13,4 +14,8 @@ export class Note {
 
   @Column({ default: false })
   archived: boolean;
+
+  @ManyToMany(() => Category, { cascade: true })
+  @JoinTable()
+  categories: Category[];
 }

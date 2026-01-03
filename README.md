@@ -7,10 +7,17 @@ Full stack implementation of a Note-taking application. The app allows users to 
 This project was built following a layered architecture in the backend and a component-based approach in the frontend.
 
 **Key Features:**
-- **Create & Edit**: Text for note content.
+- **Secure Access**: Simple login interface to protect your notes.
+- **Create & Edit**: CRUD for note content.
 - **Archive System**: Keep your workspace clean by archiving old notes.
 - **Tagging & Filtering**: Assign multiple tags to notes and filter them instantly via the search bar.
 - **Zero-Config Database**: Uses SQLite, so no external database installation (like MySQL or Postgres) is required.
+
+## 🔐 Login Credentials
+
+To access the application, use the following credentials:
+* **User**: `admin`
+* **Password**: `123456`
 
 ## 🛠️ Technology Stack
 
